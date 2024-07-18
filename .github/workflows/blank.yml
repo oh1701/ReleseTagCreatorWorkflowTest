@@ -1,78 +1,20 @@
-name: Main, Release PR Validator
+name: Release Tag Creator
 
 on:
-  pull_request:
-    branches: [ "main", "release/*.*.*" ]
+ pull_request:
+    types:
+      - closed
 
 jobs:
-  base-branch-main:
-    if: ${{ github.event.pull_request.base.ref == 'main' }}
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Main PR Branch Naming Check
-        run: |
-          echo "PR 브랜치 네이밍 확인중.."
-          BRANCH_NAME=$(echo ${{ github.head_ref }})
-
-          if [[ "$BRANCH_NAME" == "PRValidator" ]]; then
-            echo "PRValidator Branch 이므로 스킵합니다."
-            exit 0
-          fi
-
-          if [[ ! "$BRANCH_NAME" =~ ^release/[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "병합 가능한 브랜치 이름은 release/*.*.* 패턴이어야합니다."
-            exit 1
-          fi
-          echo "PR 브랜치 네이밍 검사 완료"
-
   base-branch-release:
-    if: ${{ startsWith(github.event.pull_request.base.ref, 'release/') }}
+    if: ${{ startsWith(github.event.pull_request.base.ref, 'release/') }} && github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - name: Release PR Branch Naming Check
-        run: |
-          echo "PR 브랜치 네이밍 확인중.."
-          BRANCH_NAME=$(echo ${{ github.head_ref }})
-          if [[ ! "$BRANCH_NAME" =~ ^feat/[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "병합 가능한 브랜치 이름은 feat/*.*.* 패턴이어야합니다."
-            exit 1
-          fi
-          echo "PR 브랜치 네이밍 검사 완료"
-          
-      - name: GET Main Branch App Version Code
-        run: |
-          echo "메인 브랜치에서 앱 버전 코드를 가져오는중..."
-          # main Branch 로 체크아웃하고 Build.gradle.kts 파일을 가져온다
-          git fetch origin main
-          git checkout origin/main -- app/build.gradle.kts
-          MAIN_VERSION_CODE=$(grep "versionCode" app/build.gradle.kts | head -n 1 | grep -o '[0-9]\+')
-          echo "MAIN_VERSION_CODE=$MAIN_VERSION_CODE" >> $GITHUB_ENV
-          echo "메인 브랜치 버전 코드 : $MAIN_VERSION_CODE"
-          
-      - name: GET PR Branch App Version Code
-        run: |
-          echo "PR 브랜치에서 앱 버전 코드를 가져옵니다."
-          git fetch origin ${{ github.head_ref }}
-          git checkout origin/${{ github.head_ref }} -- app/build.gradle.kts
-          PR_VERSION_CODE=$(grep "versionCode" app/build.gradle.kts | head -n 1 | grep -o '[0-9]\+')
-          echo "PR_VERSION_CODE=$PR_VERSION_CODE" >> $GITHUB_ENV
-          echo "PR 브랜치 버전 코드 : $PR_VERSION_CODE"
-
-      - name: Compare Version Code
-        run: |
-          if [ "$PR_VERSION_CODE" -le "$MAIN_VERSION_CODE" ]; then
-            echo "메인 브랜치보다 버전 코드가 높아야합니다. 버전 코드를 확인해주세요"
-            exit 1
-          fi
-          echo "버전 코드 테스트 통과"
-
       - name: 버전 정보 추출
         run: |
-          PR_VERSION_NAME=$(grep "versionName" app/build.gradle.kts | head -n 1 | grep -o '[0-9]\+')
+          echo "PR 브랜치에서 앱 버전 정보를 가져옵니다."
+          PR_VERSION_NAME=$(grep -oP '(?<=versionName\s=\s").*?(?=")' app/build.gradle.kts)
           echo "PR_VERSION_NAME=$PR_VERSION_NAME" >> $GITHUB_ENV
         id: extract_version_name  
         
