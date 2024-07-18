@@ -10,7 +10,7 @@ permissions:
   
 jobs:
   base-branch-release:
-    if: ${{ startsWith(github.event.pull_request.base.ref, 'release/') }} && github.event.pull_request.merged == true
+    if: ${{ startsWith(github.event.pull_request.base.ref, 'release/') && github.event.pull_request.merged == true }}
     runs-on: ubuntu-latest
 
     steps:
