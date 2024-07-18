@@ -24,8 +24,14 @@ jobs:
           echo "Release 브랜치에서 앱 버전 정보를 가져옵니다."
           PR_VERSION_NAME=$(grep -oP '(?<=versionName\s=\s").*?(?=")' app/build.gradle.kts)
           echo "PR_VERSION_NAME=$PR_VERSION_NAME" >> $GITHUB_ENV
-        id: extract_version_name  
-        
+
+      - name: 릴리즈 노트 (커밋 사안들) 생성
+        run: |
+          CHANGES=$(git log --oneline --no-merges ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
+          echo "## What's Changed" > release_notes.md
+          echo "$CHANGES" >> release_notes.md
+          echo "RELEASE_BODY=$(cat release_notes.md)" >> $GITHUB_ENV
+
       - name: 깃허브 릴리즈 태그 생성
         uses: actions/create-release@v1
         env: 
@@ -33,3 +39,4 @@ jobs:
         with: 
           tag_name: ${{ env.PR_VERSION_NAME }} 
           release_name: Release ${{ env.PR_VERSION_NAME }} 
+          body: ${{ env.RELEASE_BODY }}
