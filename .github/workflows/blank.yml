@@ -4,7 +4,10 @@ on:
  pull_request:
     types:
       - closed
-
+      
+permissions:
+  contents: write 
+  
 jobs:
   base-branch-release:
     if: ${{ startsWith(github.event.pull_request.base.ref, 'release/') }} && github.event.pull_request.merged == true
