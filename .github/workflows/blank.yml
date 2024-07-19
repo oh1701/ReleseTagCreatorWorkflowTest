@@ -40,10 +40,11 @@ jobs:
       - name: 릴리즈 노트 (커밋 사안들) 생성
         run: |
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          # Base Branch Log 및 Head Branch Log 가져오기 (병합 당시)
           CHANGES=$(git log --oneline --no-merges ${{ env.BASE_SHA }}..${{ env.HEAD_SHA }} )
-          CHANGES="${CHANGES//$'\n'/$'\n'- }"
+          # 커밋 내역 각 줄 앞에 - 생성
+          CHANGES=$(echo "$CHANGES" | sed 's/^/- /')
           RELEASE_BODY="## What's Changed"$'\n'"$CHANGES"
-          echo "테스트 - $RELEASE_BODY"
           {
             echo "RELEASE_BODY<<$EOF"
             echo "$RELEASE_BODY"
