@@ -41,6 +41,7 @@ jobs:
         run: |
           CHANGES=$(git log --oneline --no-merges ${{ env.BASE_SHA }}..${{ env.HEAD_SHA }} )
           RELEASE_BODY="## What's Changed"$'\n\n'"$CHANGES"
+          echo "테스트 - $RELEASE_BODY"
           echo "RELEASE_BODY=$RELEASE_BODY" >> $GITHUB_ENV
 
       - name: 깃허브 릴리즈 태그 생성
