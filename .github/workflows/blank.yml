@@ -14,26 +14,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out Head Branch
-        uses: actions/checkout@v3
-        with:
-         ref: ${{ github.event.pull_request.head.ref }}
-
-      - name: Head Branch 커밋 내역 추출
+      - name: Fetch Base And Head
         run: |
-         HEAD_SHA=${{ github.event.pull_request.head.sha }}
-         echo "HEAD_SHA=$HEAD_SHA" >> $GITHUB_ENV
+          git fetch origin ${{ github.event.pull_request.base.ref }} 
+          git fetch origin ${{ github.event.pull_request.head.ref }}
          
-      - name: Check out Base Branch
-        uses: actions/checkout@v3
-        with:
-         ref: ${{ github.event.pull_request.base.ref }}
-
-      - name: Base Branch 커밋 내역 추출
-        run: |
-         BASE_SHA=${{ github.event.pull_request.base.sha }}
-         echo "BASE_SHA=$BASE_SHA" >> $GITHUB_ENV
-          
       - name: 버전 정보 추출
         run: |
           echo "Release 브랜치에서 앱 버전 정보를 가져옵니다."
@@ -42,8 +27,7 @@ jobs:
 
       - name: 릴리즈 노트 (커밋 사안들) 생성
         run: |
-          git fetch origin $BASE_SHA $HEAD_SHA
-          CHANGES=$(git log --oneline --no-merges ${{ env.BASE_SHA }}..${{ env.HEAD_SHA }} )
+          CHANGES=$(git log --oneline --no-merges ${{ github.event.pull_request.base.ref }}..${{ github.event.pull_request.head.ref }} )
           echo "## What's Changed" > release_notes.md
           echo "$CHANGES" >> release_notes.md
           echo "RELEASE_BODY=$(cat release_notes.md)" >> $GITHUB_ENV
