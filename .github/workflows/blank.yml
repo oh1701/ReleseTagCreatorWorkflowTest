@@ -40,9 +40,7 @@ jobs:
       - name: 릴리즈 노트 (커밋 사안들) 생성
         run: |
           CHANGES=$(git log --oneline --no-merges ${{ env.BASE_SHA }}..${{ env.HEAD_SHA }} )
-          echo "## What's Changed" > release_notes.md
-          echo "$CHANGES" >> release_notes.md
-          RELEASE_BODY=$(cat release_notes.md | sed 's/"/\\"/g')
+          RELEASE_BODY="## What's Changed\n\n$CHANGES"
           echo "RELEASE_BODY=$RELEASE_BODY" >> $GITHUB_ENV
 
       - name: 깃허브 릴리즈 태그 생성
