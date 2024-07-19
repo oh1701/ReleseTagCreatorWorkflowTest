@@ -41,6 +41,7 @@ jobs:
         run: |
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           # Base Branch Log 및 Head Branch Log 가져오기 (병합 당시)
+          # --no-merges 로 merge Commit 은 필터링, oneline 으로 커밋 로그를 한 줄로 요약하여 출력 
           CHANGES=$(git log --oneline --no-merges ${{ env.BASE_SHA }}..${{ env.HEAD_SHA }} )
           # 커밋 내역 각 줄 앞에 - 생성
           CHANGES=$(echo "$CHANGES" | sed 's/^/- /')
