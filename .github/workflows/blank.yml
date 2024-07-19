@@ -42,7 +42,7 @@ jobs:
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           CHANGES=$(git log --oneline --no-merges ${{ env.BASE_SHA }}..${{ env.HEAD_SHA }} )
           CHANGES="${CHANGES//$'\n'/$'\n'- }"
-          RELEASE_BODY="## What's Changed\n- $CHANGES"
+          RELEASE_BODY="## What's Changed"$'\n'"$CHANGES"
           echo "테스트 - $RELEASE_BODY"
           {
             echo "RELEASE_BODY<<$EOF"
