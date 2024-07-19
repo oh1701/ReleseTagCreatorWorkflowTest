@@ -39,13 +39,15 @@ jobs:
 
       - name: 릴리즈 노트 (커밋 사안들) 생성
         run: |
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           CHANGES=$(git log --oneline --no-merges ${{ env.BASE_SHA }}..${{ env.HEAD_SHA }} )
-          RELEASE_BODY="## What's Changed"$'\n'$CHANGES"
+          CHANGES="${CHANGES//$'\n'/$'\n'- }"
+          RELEASE_BODY="## What's Changed\n- $CHANGES"
           echo "테스트 - $RELEASE_BODY"
           {
-            echo "RELEASE_BODY<<EOF"
+            echo "RELEASE_BODY<<$EOF"
             echo "$RELEASE_BODY"
-            echo "EOF"
+            echo "$EOF"
           } >> $GITHUB_ENV
 
       - name: 깃허브 릴리즈 태그 생성
