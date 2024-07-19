@@ -14,6 +14,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: 버전 정보 추출
+        run: |
+          echo "Release 브랜치에서 앱 버전 정보를 가져옵니다."
+          PR_VERSION_NAME=$(grep -oP '(?<=versionName\s=\s").*?(?=")' app/build.gradle.kts)
+          echo "PR_VERSION_NAME=$PR_VERSION_NAME" >> $GITHUB_ENV
+          
       - name: Fetch base and head SHAs
         run: |
           git init
@@ -22,12 +28,6 @@ jobs:
           git fetch origin ${{ github.event.pull_request.head.sha }}
           echo "BASE_SHA=${{ github.event.pull_request.base.sha }}" >> $GITHUB_ENV
           echo "HEAD_SHA=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
-         
-      - name: 버전 정보 추출
-        run: |
-          echo "Release 브랜치에서 앱 버전 정보를 가져옵니다."
-          PR_VERSION_NAME=$(grep -oP '(?<=versionName\s=\s").*?(?=")' app/build.gradle.kts)
-          echo "PR_VERSION_NAME=$PR_VERSION_NAME" >> $GITHUB_ENV
 
       - name: 릴리즈 노트 (커밋 사안들) 생성
         run: |
