@@ -14,10 +14,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Fetch Base And Head
+      - name: Fetch base and head SHAs
         run: |
-          git fetch origin ${{ github.event.pull_request.base.ref }} 
-          git fetch origin ${{ github.event.pull_request.head.ref }}
+          git init
+          git remote add origin https://github.com/${{ github.repository }}.git
+          git fetch origin ${{ github.event.pull_request.base.sha }}
+          git fetch origin ${{ github.event.pull_request.head.sha }}
+          echo "BASE_SHA=${{ github.event.pull_request.base.sha }}" >> $GITHUB_ENV
+          echo "HEAD_SHA=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
          
       - name: 버전 정보 추출
         run: |
@@ -27,7 +31,7 @@ jobs:
 
       - name: 릴리즈 노트 (커밋 사안들) 생성
         run: |
-          CHANGES=$(git log --oneline --no-merges ${{ github.event.pull_request.base.ref }}..${{ github.event.pull_request.head.ref }} )
+          CHANGES=$(git log --oneline --no-merges ${{ env.BASE_SHA }}..${{ env.HEAD_SHA }} )
           echo "## What's Changed" > release_notes.md
           echo "$CHANGES" >> release_notes.md
           echo "RELEASE_BODY=$(cat release_notes.md)" >> $GITHUB_ENV
