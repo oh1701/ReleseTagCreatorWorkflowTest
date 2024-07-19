@@ -40,7 +40,7 @@ jobs:
       - name: 릴리즈 노트 (커밋 사안들) 생성
         run: |
           CHANGES=$(git log --oneline --no-merges ${{ env.BASE_SHA }}..${{ env.HEAD_SHA }} )
-          RELEASE_BODY="## What's Changed"$'\n'$CHANGES"
+          RELEASE_BODY="## What's Changed"$'\n'$CHANGES"$'\n'"EOF"
           echo "테스트 - $RELEASE_BODY"
           echo "RELEASE_BODY=\"$RELEASE_BODY\"" >> $GITHUB_ENV
 
