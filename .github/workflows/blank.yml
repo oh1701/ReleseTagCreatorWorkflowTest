@@ -14,10 +14,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout base branch
-        uses: actions/checkout@v2
+      - name: Check out Head Branch
+        uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.pull_request.base.ref }}
+         ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Head Branch 커밋 내역 추출
+        run: |
+         HEAD_SHA=${{ github.event.pull_request.head.sha }}
+         echo "$HEAD_SHA" >> $GITHUB_ENV
+         
+      - name: Check out Base Branch
+        uses: actions/checkout@v3
+        with:
+         ref: ${{ github.event.pull_request.base.ref }}
+
+      - name: Base Branch 커밋 내역 추출
+        run: |
+         BASE_SHA=${{ github.event.pull_request.base.sha }}
+         echo "$BASE_SHA" >> $GITHUB_ENV
           
       - name: 버전 정보 추출
         run: |
@@ -27,7 +42,8 @@ jobs:
 
       - name: 릴리즈 노트 (커밋 사안들) 생성
         run: |
-          CHANGES=$(git log --oneline --no-merges ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
+          git fetch origin $BASE_SHA $HEAD_SHA
+          CHANGES=$(git log --oneline --no-merges ${{ env.BASE_SHA }}..${{ HEAD_SHA }} )
           echo "## What's Changed" > release_notes.md
           echo "$CHANGES" >> release_notes.md
           echo "RELEASE_BODY=$(cat release_notes.md)" >> $GITHUB_ENV
