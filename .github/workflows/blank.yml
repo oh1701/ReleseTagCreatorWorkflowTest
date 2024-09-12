@@ -45,8 +45,8 @@ jobs:
           CHANGES=$(git log --oneline ${{ env.BASE_SHA }}..${{ env.HEAD_SHA }} )
           # Merge Branch 문장 찾고 마지막 단어만 추출, 그리고 샾 세개를 붙여 강조표시
           CHANGES=$(echo "$CHANGES" | sed '/^Merge Branch/ s/.*\s\([^ ]*\)$/### \1/')
-          # Merge Branch 로 시작하지 않는 커밋 내역 각 줄 앞에 - 생성
-          CHANGES=$(echo "$CHANGES" | sed '/^Merge Branch/! s/^/- /')
+          # 샾 세개로 시작하지 않는 커밋 내역 각 줄 앞에 - 생성
+          CHANGES=$(echo "$CHANGES" | sed '/^###/! s/^/- /')
           RELEASE_BODY="## What's Changed"$'\n'"$CHANGES"
           {
             echo "RELEASE_BODY<<$EOF"
