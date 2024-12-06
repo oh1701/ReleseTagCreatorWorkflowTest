@@ -4,13 +4,15 @@ on:
  pull_request:
     types:
       - closed
+    branches:
+      - master
       
 permissions:
   contents: write 
   
 jobs:
-  base-branch-release:
-    if: ${{ startsWith(github.event.pull_request.base.ref, 'release/') && github.event.pull_request.merged == true }}
+  Base-branch-tag:
+    if: ${{ github.event.pull_request.merged == true }}
     runs-on: ubuntu-latest
 
     steps:
@@ -19,34 +21,32 @@ jobs:
         with:
           fetch-depth: 0
           
-      - name: Base 및 Head Sha 가져옴
+      - name: Fetch Base And Head
         run: |
           git fetch origin ${{ github.event.pull_request.base.sha }}
           git fetch origin ${{ github.event.pull_request.head.sha }}
           echo "BASE_SHA=${{ github.event.pull_request.base.sha }}" >> $GITHUB_ENV
           echo "HEAD_SHA=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
           
-      - name: Base Branch 로 체크아웃
+      - name: Checkout Base Branch
         uses: actions/checkout@v2
         with:
           ref: ${{ github.event.pull_request.base.ref }}
           
-      - name: 버전 정보 추출
+      - name: extract Version Name
         run: |
-          echo "Release 브랜치에서 앱 버전 정보를 가져옵니다."
+          echo "앱 버전 정보를 가져오는중 .."
           PR_VERSION_NAME=$(grep -oP '(?<=versionName\s=\s").*?(?=")' app/build.gradle.kts)
           echo "PR_VERSION_NAME=$PR_VERSION_NAME" >> $GITHUB_ENV
 
-      - name: 릴리즈 노트 (커밋 사안들) 생성
+      - name: Generate Tag Body (Commits)
         run: |
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           # Base Branch Log 및 Head Branch Log 가져오기 (병합 당시)
-          # oneline 으로 커밋 로그를 한 줄로 요약하여 출력 
-          CHANGES=$(git log --oneline ${{ env.BASE_SHA }}..${{ env.HEAD_SHA }} )
-          # Merge Branch 문장 찾고 마지막 단어만 추출, 그리고 샾 세개를 붙여 강조표시
-          CHANGES=$(echo "$CHANGES" | sed '/^Merge Branch/ s/.*\s\([^ ]*\)$/### \1/')
-          # 샾 세개로 시작하지 않는 커밋 내역 각 줄 앞에 - 생성
-          CHANGES=$(echo "$CHANGES" | sed '/^###/! s/^/- /')
+          # --no-merges 로 merge Commit 은 필터링, oneline 으로 커밋 로그를 한 줄로 요약하여 출력 
+          CHANGES=$(git log --oneline --no-merges ${{ env.BASE_SHA }}..${{ env.HEAD_SHA }} )
+          # 커밋 내역 각 줄 앞에 - 생성
+          CHANGES=$(echo "$CHANGES" | sed 's/^/- /')
           RELEASE_BODY="## What's Changed"$'\n'"$CHANGES"
           {
             echo "RELEASE_BODY<<$EOF"
@@ -54,11 +54,11 @@ jobs:
             echo "$EOF"
           } >> $GITHUB_ENV
 
-      - name: 깃허브 릴리즈 태그 생성
+      - name: Generate Release Tag
         uses: actions/create-release@v1
         env: 
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with: 
-          tag_name: ${{ env.PR_VERSION_NAME }} 
+          tag_name: Release/${{ env.PR_VERSION_NAME }} 
           release_name: Release ${{ env.PR_VERSION_NAME }} 
           body: ${{ env.RELEASE_BODY }}
